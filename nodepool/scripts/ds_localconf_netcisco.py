@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+#
+# Generate devstack local.conf from jinja templates & yaml data.
+# - Allow for multiple templates at global level and post-config file level
+#
+#
 
 import jinja2
 import yaml
@@ -27,7 +32,7 @@ routers:
 
 """
 
-ASR_lconf_templ = """
+ASR_lconf_global_tmpl = """
 disable_service q-l3
 # Default routertype for Neutron routers                                                                                                                                      
 Q_CISCO_DEFAULT_ROUTER_TYPE=ASR1k_router
@@ -35,7 +40,11 @@ Q_CISCO_DEFAULT_ROUTER_TYPE=ASR1k_router
 enable_service ciscocfgagent
 enable_service q-ciscorouter
 
-[[post-config|/etc/neutron/neutron.conf]]
+"""
+
+ASR_lconf_neutron_conf_tmpl = """
+[DEFAULT]
+api_extensions_path = extensions:/opt/stack/networking-cisco/networking_cisco/plugins/cisco/extensions
 
 [hosting_devices_templates]
 [cisco_hosting_device_template:1]
@@ -98,9 +107,6 @@ driver=networking_cisco.plugins.cisco.l3.drivers.asr1k.asr1k_routertype_driver.A
 cfg_agent_service_helper=networking_cisco.plugins.cisco.cfg_agent.service_helpers.routing_svc_helper.RoutingServiceHelper
 cfg_agent_driver=networking_cisco.plugins.cisco.cfg_agent.device_drivers.asr1k.asr1k_routing_driver.ASR1kRoutingDriver
 
-[routing]
-default_router_type = ASR1k_router
-
 [hosting_device_credentials]
 {% for router_name in topo_data.routers -%}
 {% set router = topo_data.routers[router_name] -%}
@@ -149,13 +155,42 @@ internal_net_interface_1=*:{{ router.ports[port_name].intf }}
 
 """
 
+lconf_template_info = {
+    "global": [ ASR_lconf_global_tmpl ],
+    "postcfg_files": {
+        "/etc/neutron/neutron.conf": [ ASR_lconf_neutron_conf_tmpl ]
+    }
+}
+
+class NetCiscoLocalConf(object):
+    def __init__(self, local_conf_info):
+        self.local_conf_info = local_conf_info
+
+    def _render_section(self, section_tmpl_list, template_data):
+        section_data = ""
+        for tmpl in section_tmpl_list:
+            section_tmpl = jinja2.Template(tmpl)
+            section_data += section_tmpl.render(template_data)
+            section_data += "\n"
+        return section_data
+
+    def generate_local_conf(self, template_data_d):
+        global_section = self._render_section(self.local_conf_info['global'], template_data_d)
+
+        files_section = ""
+        for postcfg_file in self.local_conf_info['postcfg_files']:
+            files_section += "[[post-config|" + postcfg_file + "]]"
+            files_section += self._render_section(self.local_conf_info['postcfg_files'][postcfg_file], template_data_d)
+
+        return global_section + files_section
+
 def main():
     """Output local.conf settings specific to networking-cisco plugins."""
     # TODO--add yaml file as param for testbed data; slurp in yaml file; render template from yaml
     topo_data = yaml.load(topo_data_yaml)
     asr_data = { 'topo_data': topo_data }
-    asr_templ = jinja2.Template(ASR_lconf_templ)
-    asr_lconf = asr_templ.render(asr_data)
+    lconf = NetCiscoLocalConf(lconf_template_info)
+    asr_lconf = lconf.generate_local_conf(asr_data)
     print asr_lconf
 
 if __name__ == '__main__':
