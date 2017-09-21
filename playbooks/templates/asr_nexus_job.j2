@@ -1,9 +1,9 @@
-{% include "roles/create_local_conf/templates/lconf_common_vlan.j2" %}
-{% include "roles/create_local_conf/templates/lconf_nexus_glbl.j2" %}
-{% include "roles/create_local_conf/templates/lconf_asr_glbl.j2" %}
+{% include "lconf_common_vlan.j2" %}
+{% include "lconf_nexus_glbl.j2" %}
+{% include "lconf_asr_glbl.j2" %}
 
 [[post-config|/etc/neutron/neutron.conf]]
-{% include "roles/create_local_conf/templates/lconf_asr_postcfg_neutron_conf.j2" %}
+{% include "lconf_asr_postcfg_neutron_conf.j2" %}
 
 [[post-config|\$Q_PLUGIN_CONF_FILE]]
-{% include "roles/create_local_conf/templates/lconf_nexus_postcfg_neutron_conf.j2" %}
+{% include "lconf_nexus_postcfg_neutron_conf.j2" %}

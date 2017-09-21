@@ -1,0 +1,16 @@
+{% for tmpl in local_conf_glbl_templates %}
+{# if hostvars[inventory_hostname][tmpl.enable_var] #}
+{% if vars[tmpl.enable_var] %}
+{{ lookup('template', 'templates/' + tmpl.template) }}
+{% endif %}
+{% endfor %}
+
+{% for file_nm in local_conf_postconfig_templates.keys() %}
+[[post-config|{{ file_nm }}]]
+{% for tmpl in local_conf_postconfig_templates[file_nm] %}
+{# if hostvars[inventory_hostname][tmpl.enable_var] #}
+{% if vars[tmpl.enable_var] %}
+{{ lookup('template', 'templates/' + tmpl.template) }}
+{% endif %}
+{% endfor %}
+{% endfor %}
