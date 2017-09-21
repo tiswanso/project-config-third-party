@@ -4,6 +4,7 @@
   vars:
     vlan_tenant_enabled: True
     nexus_plugin_enabled: True
+    asr_plugin_enabled: True
   tasks:
     - name: Use composable template including other templates
       set_fact:
