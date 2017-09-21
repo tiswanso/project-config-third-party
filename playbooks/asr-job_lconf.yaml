@@ -1,0 +1,10 @@
+---
+- hosts: primary
+  gather_facts: False
+  tasks:
+    - name: Use template including other templates
+      set_fact:
+         local_conf: "{{ lookup('template', 'templates/asr_nexus_job.j2') }}"
+    - debug: var=local_conf
+
+
