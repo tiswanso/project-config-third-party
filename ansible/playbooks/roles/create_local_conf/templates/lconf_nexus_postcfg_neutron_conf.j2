@@ -1,0 +1,26 @@
+[ml2_cisco]
+{% if nexus_ml2_driver_type is defined and nexus_ml2_driver_type in ['ncclient', 'restapi'] %}
+nexus_driver={{ nexus_ml2_driver_type }}
+{% endif %}
+
+{% for switch_name in topo_data.net_connections %}
+{% set switch = topo_data.net_connections[switch_name] %}
+{% if switch.type == 'nexus' %}
+[ml2_mech_cisco_nexus:{{ switch.ipaddr }}]
+ssh_port = 22
+username = {{ switch.user }}
+password = {{ switch.password }}
+physnet = {{ nexus_physnet }}
+{% if topo_data.vpc_pool is defined %}
+vpc_pool = {{ topo_data.vpc_pool | default('1000,1020') }}
+{% endif %}
+
+{% for host in switch.connected_hosts %}
+{{ host }} = {% for port_name in switch.connected_hosts[host].switchports -%}{% if loop.index > 1 %},{% endif %}
+{% if 'port-channel' in port_name -%}
+{{ port_name | regex_replace('^([A-Za-z\-]+)(\d+.*)$', '\\1:\\2') }}{% else -%}{{ port_name }}{% endif -%}
+{% endfor -%}
+{% endfor %}
+{% endif %}
+
+{% endfor %}

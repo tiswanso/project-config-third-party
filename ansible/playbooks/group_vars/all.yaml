@@ -1,0 +1,44 @@
+---
+topo_data:
+  routers:
+    ASR_1:
+      type: asr
+      ipaddr: 10.0.198.207
+      user: admin
+      password: "CTO1234!"
+      ports:
+        intf:
+          type: "data"
+          intf: "te0/0/0"
+    ASR_2:
+      type: asr
+      ipaddr: 10.0.198.206
+      user: admin
+      password: "CTO1234!"
+      ports:
+        intf:
+          type: "data"
+          intf: "te0/0/0"
+
+  net_connections:
+    Test_infra_N9K:
+      type: nexus
+      ipaddr: 192.133.148.13
+      user: admin
+      password: "CTO1234!"
+      connected_hosts:
+        node-provider:
+          type: ucs
+          switchports: 
+            1/17:
+              intf: mlom_0
+            1/18:
+              intf: mlom_1
+
+vlan_tenant_enabled: True
+asr_plugin_enabled: True
+nexus_plugin_enabled: True
+
+nexus_physnet: nexusnet
+# uncomment if need ncclient
+# nexus_ml2_driver_type = ncclient

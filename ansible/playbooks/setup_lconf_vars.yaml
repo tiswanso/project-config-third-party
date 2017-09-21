@@ -1,0 +1,6 @@
+---
+- hosts: primary
+  gather_facts: False
+  roles:
+    - create_local_conf
+

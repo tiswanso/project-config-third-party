@@ -1,0 +1,23 @@
+---
+- name: Build the global section of the local.conf (for enabled plugins)
+  set_fact:
+    local_conf_global_section: "{{ local_conf_global_section | default() }}{{ lookup('template', item.template) }}\n"
+  when: "{{ hostvars[inventory_hostname][item.enable_var] }}"
+  with_items: "{{ local_conf_glbl_templates }}"
+
+- debug: var=local_conf_global_section
+
+- name: Build the full local.conf file data from enabled sections
+  set_fact:
+    local_conf: >
+      {{ local_conf_global_section }}
+      {% for file_nm in local_conf_postconfig_templates.keys() %}
+      [[post-config|{{ file_nm }}]]
+      {% for tmpl in local_conf_postconfig_templates[file_nm] %}
+      {% if hostvars[inventory_hostname][tmpl.enable_var] %}
+      {{ lookup('template', tmpl.template) }}
+      {% endif %}
+      {% endfor %}
+      {% endfor %}
+
+- debug: var=local_conf

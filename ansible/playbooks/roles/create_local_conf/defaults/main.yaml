@@ -1,0 +1,23 @@
+---
+
+local_conf_glbl_templates:
+  -
+    template: lconf_common_vlan.j2
+    enable_var: vlan_tenant_enabled
+  -
+    template: lconf_asr_glbl.j2
+    enable_var: asr_plugin_enabled
+  -
+    template: lconf_nexus_glbl.j2
+    enable_var: nexus_plugin_enabled
+
+local_conf_postconfig_templates:
+  /etc/neutron/neutron.conf:
+    -
+      template: lconf_asr_postcfg_neutron_conf.j2
+      enable_var: asr_plugin_enabled
+  '\$Q_PLUGIN_CONF_FILE':
+    -
+      template: lconf_nexus_postcfg_neutron_conf.j2
+      enable_var: nexus_plugin_enabled
+
